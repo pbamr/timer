@@ -1,0 +1,364 @@
+#!/usr/bin/bash
+#* Copyright (c) 2022/03/28, 2025.07.08, Peter Boettcher, Germany/NRW, Muelheim Ruhr, mail:peter.boettcher@gmx.net
+# * Urheber: 2022.03.28, 2025.12.13, Peter Boettcher, Germany/NRW, Muelheim Ruhr, mail:peter.boettcher@gmx.net
+#
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2, or (at your option)
+# * any later version.
+#
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+#
+# * You should have received a copy of the GNU General Public License
+# * along with this program.  If not, see <http://www.gnu.org/licenses/>
+# */
+
+
+#simple
+
+echo "shutdown 2026/1, Peter Boettcher";
+echo ""
+
+
+#Abfrage ob 1ter Parameter OK, bzw. vorhanden ist. Wenn nicht Abbruch
+#case "$1" in
+#'')
+#	echo "ERROR: There is no Parameter 1";
+#	exit 1;
+#	;;
+#*)
+#esac
+
+
+
+
+
+
+order=$1;
+
+#----------------------------------------------------------
+if [ "$order" = "-S" ]; then
+	case "$2" in
+	'')
+		echo "ERROR: There is no Parameter 2 <SEC.>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	retval=$2;
+	sysctl kernel.timer.init_shutdown_timer=$retval;
+
+	exit 0;
+fi
+
+
+#----------------------------------------------------------
+if [ "$order" = "-M" ]; then
+	case "$2" in
+	'')
+		echo "ERROR: There is no Parameter 2 <MIN.>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	MIN=$2;
+
+	retval=$((MIN * 60));
+
+	sysctl kernel.timer.init_shutdown_timer=$retval;
+
+	exit 0;
+fi
+
+#----------------------------------------------------------
+if [ "$order" = "-H" ]; then
+	case "$2" in
+	'')
+		echo "ERROR: There is no Parameter 2 <HOUR>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	case "$3" in
+	'')
+		echo "ERROR: There is no Parameter 3 <MIN.>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	HOUR=$2;
+	MIN=$3;
+
+	retval=$(( (HOUR * 3600) + (MIN * 60) ));
+
+	sysctl kernel.timer.init_shutdown_timer=$retval;
+
+	exit 0;
+fi
+
+
+#----------------------------------------------------------
+if [ "$order" = "-D" ]; then
+	case "$2" in
+	'')
+		echo "ERROR: There is no Parameter 2 <DAY>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	case "$3" in
+	'')
+		echo "ERROR: There is no Parameter 3 <HOUR>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	case "$4" in
+	'')
+		echo "ERROR: There is no Parameter 4 <MIN.>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	DAY=$2
+	HOUR=$3;
+	MIN=$4;
+
+	retval=$(( (DAY * 24 * 3600) + (HOUR * 3600) + (MIN * 60) ));
+
+	sysctl kernel.timer.init_shutdown_timer=$retval;
+
+	exit 0;
+fi
+
+#----------------------------------------------------------
+if [ "$order" = "-Y" ]; then
+	case "$2" in
+	'')
+		echo "ERROR: There is no Parameter 2 <YEAR>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	case "$3" in
+	'')
+		echo "ERROR: There is no Parameter 3 <DAY>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	case "$4" in
+	'')
+		echo "ERROR: There is no Parameter 4 <HOUR>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	case "$5" in
+	'')
+		echo "ERROR: There is no Parameter 5 <MIN>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+
+
+	YEAR=$2;
+	DAY=$3;
+	HOUR=$4;
+	MIN=$5;
+
+	retval=$(( (YEAR * 365 * 24 * 3600) + (DAY * 24 * 3600) + (HOUR * 3600) + (MIN * 60) ));
+
+	sysctl kernel.timer.init_shutdown_timer=$retval;
+
+	exit 0;
+fi
+
+#----------------------------------------------------------
+if [ "$order" = "-nS" ]; then
+	case "$2" in
+	'')
+		echo "ERROR: There is no Parameter 2 <SEC.>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	retval=$2;
+
+	sysctl kernel.timer.set_new_shutdown_timer=$retval;
+
+	exit 0;
+fi
+
+
+#----------------------------------------------------------
+if [ "$order" = "-nM" ]; then
+	case "$2" in
+	'')
+		echo "ERROR: There is no Parameter 2 <MIN.>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	MIN=$2;
+
+	retval=$((MIN * 60));
+
+
+	sysctl kernel.timer.set_new_shutdown_timer=$retval;
+
+	exit 0;
+fi
+
+#----------------------------------------------------------
+if [ "$order" = "-nH" ]; then
+	case "$2" in
+	'')
+		echo "ERROR: There is no Parameter 2 <HOUR>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	case "$3" in
+	'')
+		echo "ERROR: There is no Parameter 3 <MIN.>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	HOUR=$2;
+	MIN=$3;
+
+	retval=$(( (HOUR * 3600) + (MIN * 60) ));
+
+	sysctl kernel.timer.set_new_shutdown_timer=$retval;
+
+	exit 0;
+fi
+
+
+#----------------------------------------------------------
+if [ "$order" = "-nD" ]; then
+	case "$2" in
+	'')
+		echo "ERROR: There is no Parameter 2 <DAY>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	case "$3" in
+	'')
+		echo "ERROR: There is no Parameter 3 <HOUR>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	case "$4" in
+	'')
+		echo "ERROR: There is no Parameter 4 <MIN.>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	DAY=$2
+	HOUR=$3;
+	MIN=$4;
+
+	retval=$(( (DAY * 24 * 3600) + (HOUR * 3600) + (MIN * 60) ));
+
+	sysctl kernel.timer.set_new_shutdown_timer=$retval;
+
+	exit 0;
+fi
+
+#----------------------------------------------------------
+if [ "$order" = "-nY" ]; then
+	case "$2" in
+	'')
+		echo "ERROR: There is no Parameter 2 <YEAR>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	case "$3" in
+	'')
+		echo "ERROR: There is no Parameter 3 <DAY>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	case "$4" in
+	'')
+		echo "ERROR: There is no Parameter 4 <HOUR>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+	case "$5" in
+	'')
+		echo "ERROR: There is no Parameter 5 <MIN>";
+		exit 1;
+		;;
+	*)
+	esac;
+
+
+
+	YEAR=$2;
+	DAY=$3;
+	HOUR=$4;
+	MIN=$5;
+
+	retval=$(( (YEAR * 365 * 24 * 3600) + (DAY * 24 * 3600) + (HOUR * 3600) + (MIN * 60) ));
+
+
+	sysctl kernel.timer.set_new_shutdown_timer=$retval;
+
+	exit 0;
+fi
+
+
+
+#----------------------------------------------------------
+echo "
+Parameter   :  -S      <Sec.>
+Parameter   :  -M      <Min.>
+Parameter   :  -H      <Hour >Min.>
+Parameter   :  -D      <Day> <Hour> <Min.>
+Parameter   :  -Y      <Year> <Day> <Hour> <Min.>
+
+Parameter   :  -nS      <Sec.>
+Parameter   :  -nM      <Min.>
+Parameter   :  -nH      <Hour >Min.>
+Parameter   :  -nD      <Day> <Hour> <Min.>
+Parameter   :  -nY      <Year> <Day> <Hour> <Min.>
+
+";
+
+echo "ERROR";
+
