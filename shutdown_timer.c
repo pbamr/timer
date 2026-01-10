@@ -135,7 +135,7 @@ static int proc_init_shutdown_timer(const struct ctl_table *table,
 	init_shutdown_time_sec /= 30;
 	init_shutdown_time_sec *= 30;
 
-	if ((s64) (ktime_get_real_seconds() + init_shutdown_time_sec) <= 0) {
+	if ((s64) (ktime_get_real_seconds() + init_shutdown_time_sec) < 30) {
 					printk("SHUTDOWN: TIME NOT allowed\n");
 					mutex_unlock(&control);
 					return -1;
@@ -182,7 +182,7 @@ static int proc_new_shutdown_timer(const struct ctl_table *table,
 	new_shutdown_time_sec /= 30;
 	new_shutdown_time_sec *= 30;
 
-	if ((s64) (ktime_get_real_seconds() + init_shutdown_time_sec) <= 0) {
+	if ((s64) (ktime_get_real_seconds() + init_shutdown_time_sec) < 30) {
 					printk("SHUTDOWN: TIME NOT allowed\n");
 					mutex_unlock(&control);
 					return -1;
