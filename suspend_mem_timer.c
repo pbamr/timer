@@ -154,7 +154,7 @@ static int proc_set_suspend_mem_timer(const struct ctl_table *table,
 	suspend_to_mem_time_sec_temp /= 30;
 	suspend_to_mem_time_sec_temp *= 30;
 
-	if ((s64) (ktime_get_real_seconds() + suspend_to_mem_time_sec_temp) <= 0) {
+	if ((s64) (ktime_get_real_seconds() + suspend_to_mem_time_sec_temp) < 30) {
 					printk("SUSPEND TO MEM: TIME NOT allowed\n");
 					mutex_unlock(&control);
 					return -1;
