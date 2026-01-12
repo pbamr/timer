@@ -29,11 +29,8 @@
 
 
 
-
-#define PRINTK
-
 /*------------------------------------------------------------------------------------*/
-/* suspend to MEM */
+/* shutdown */
 static DEFINE_MUTEX(control);
 static bool shutdown_active = false;
 static s64 shutdown_time_sec = 0;
@@ -71,8 +68,9 @@ static struct task_struct *kt_shutdown_timer;
 static int shutdown_timer(void *data)
 {
 
-	s64 diff_time;
-	s64 old_unix_epoch_time_sec = ktime_get_real_seconds();
+	/* monoton vorwaertslaufend. Auch bei vorherigem sleep wird die Zeit angepasst */
+	/* erkennt vorheriges schlafen */
+	s64 start_time_sec = ktime_get_boottime_seconds();
 
 	/* wait */
 	for (;;) {
@@ -82,21 +80,17 @@ static int shutdown_timer(void *data)
 
 		mutex_lock(&control);
 
-		diff_time = ktime_get_real_seconds() - old_unix_epoch_time_sec;
-
-		if (diff_time <= 0) 
-			shutdown_time_sec -= 5;
-		else shutdown_time_sec -= diff_time;
-
+		shutdown_time_sec -= ktime_get_boottime_seconds() - start_time_sec;
 
 		if (shutdown_time_sec <= 0) {
 			mutex_unlock(&control);
 			break;
 		}
 
-		old_unix_epoch_time_sec = ktime_get_real_seconds();
+		start_time_sec = ktime_get_boottime_seconds();
 
 		mutex_unlock(&control);
+
 	}
 
 	/* Shutdown/Halt */
@@ -135,26 +129,26 @@ static int proc_init_shutdown_timer(const struct ctl_table *table,
 	init_shutdown_time_sec /= 30;
 	init_shutdown_time_sec *= 30;
 
-	if ((s64) (ktime_get_real_seconds() + init_shutdown_time_sec) < 30) {
+	if ((s64) (ktime_get_boottime_seconds() + init_shutdown_time_sec) < 30) {
 					printk("SHUTDOWN: TIME NOT allowed\n");
 					mutex_unlock(&control);
 					return -1;
 				}
 
 
-	kt_shutdown_timer = kthread_create (shutdown_timer, NULL, "shutdown");
+	kt_shutdown_timer = kthread_create (shutdown_timer, NULL, "pari");
 	if (kt_shutdown_timer == NULL) {
 		printk("SHUTDOWN:TIMER INIT ERROR\n");
 		mutex_unlock(&control);
 		return -1;
 	}
 
-	printk("SHUTDOWN:TIMER INIT OK\n");
+	pr_info("SHUTDOWN:TIMER INIT OK\n");
 	// ACTIVE 
 	shutdown_time_sec = init_shutdown_time_sec;
 	shutdown_active = true;
-	wake_up_process(kt_shutdown_timer);
 	mutex_unlock(&control);
+	wake_up_process(kt_shutdown_timer);
 
 	return 0;
 }
@@ -182,7 +176,7 @@ static int proc_new_shutdown_timer(const struct ctl_table *table,
 	new_shutdown_time_sec /= 30;
 	new_shutdown_time_sec *= 30;
 
-	if ((s64) (ktime_get_real_seconds() + init_shutdown_time_sec) < 30) {
+	if ((s64) (ktime_get_boottime_seconds() + init_shutdown_time_sec) < 30) {
 					printk("SHUTDOWN: TIME NOT allowed\n");
 					mutex_unlock(&control);
 					return -1;

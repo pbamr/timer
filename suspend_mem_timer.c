@@ -30,7 +30,6 @@
 
 
 
-#define PRINTK
 
 /*------------------------------------------------------------------------------------*/
 /* suspend to MEM */
@@ -72,8 +71,10 @@ static int suspend_to_mem_timer(void *data)
 {
 
 	int error;
-	s64 diff_time;
-	s64 old_unix_epoch_time_sec = ktime_get_real_seconds();
+
+	/* monoton vorwaertslaufend. Auch bei vorherigem sleep wird die Zeit angepasst */
+	/* erkennt vorheriges schlafen */
+	s64 start_time_sec = ktime_get_boottime_seconds();
 
 	/* wait */
 	for (;;) {
@@ -83,19 +84,14 @@ static int suspend_to_mem_timer(void *data)
 
 		mutex_lock(&control);
 
-		diff_time = ktime_get_real_seconds() - old_unix_epoch_time_sec;
-
-		if (diff_time <= 0) 
-			suspend_to_mem_time_sec -= 5;
-		else suspend_to_mem_time_sec -= diff_time;
-
+		suspend_to_mem_time_sec -= ktime_get_boottime_seconds() - start_time_sec;
 
 		if (suspend_to_mem_time_sec <= 0) {
 			mutex_unlock(&control);
 			break;
 		}
 
-		old_unix_epoch_time_sec = ktime_get_real_seconds();
+		start_time_sec = ktime_get_boottime_seconds();
 
 		mutex_unlock(&control);
 	}
@@ -105,11 +101,9 @@ static int suspend_to_mem_timer(void *data)
 		error = pm_suspend(PM_SUSPEND_MEM);
 		if (!error) break;
 
-		ssleep(5);
 		error = pm_suspend(PM_SUSPEND_TO_IDLE);
 		if (!error) break;
 
-		ssleep(5);
 		error = pm_suspend(PM_SUSPEND_STANDBY);
 
 		break;
@@ -154,7 +148,7 @@ static int proc_set_suspend_mem_timer(const struct ctl_table *table,
 	suspend_to_mem_time_sec_temp /= 30;
 	suspend_to_mem_time_sec_temp *= 30;
 
-	if ((s64) (ktime_get_real_seconds() + suspend_to_mem_time_sec_temp) < 30) {
+	if ((s64) (ktime_get_boottime_seconds() + suspend_to_mem_time_sec_temp) < 30) {
 					printk("SUSPEND TO MEM: TIME NOT allowed\n");
 					mutex_unlock(&control);
 					return -1;
@@ -173,8 +167,8 @@ static int proc_set_suspend_mem_timer(const struct ctl_table *table,
 		// ACTIVE 
 		suspend_to_mem_time_sec = suspend_to_mem_time_sec_temp;
 		suspend_mem_active = true;
-		wake_up_process(kt_suspend_to_mem_timer);
 		mutex_unlock(&control);
+		wake_up_process(kt_suspend_to_mem_timer);
 		return 0;
 	}
 
@@ -210,4 +204,4 @@ static int __init suspend_mem_timer_init(void)
 }
 postcore_initcall(suspend_mem_timer_init);
 
-
+y
